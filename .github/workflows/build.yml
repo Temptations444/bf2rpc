@@ -1,0 +1,23 @@
+name: build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet test
+      - run: dotnet publish src/BF2Presence -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:DebugType=none -o publish
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BF2Presence-win-x64
+          path: |
+            publish/BF2Presence.exe
+            publish/appsettings.json
+            publish/offsets.json
