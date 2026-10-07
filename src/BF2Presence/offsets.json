@@ -1,0 +1,16 @@
+﻿{
+  "gameVersion": "LevelName + Kills/Deaths/Assists/Score verified (MP + co-op) 2026-10 (PC, current live build)",
+
+  "roots": {
+    "LevelBase": { "moduleOffset": "0x3AEBB18" },
+    "PlayerBase": { "moduleOffset": "0x3D79C20" }
+  },
+
+  "fields": {
+    "LevelName": { "root": "LevelBase", "offsets": [ "0x10", "0x0" ], "type": "string" },
+    "Kills":   { "root": "PlayerBase", "offsets": [ "0x30", "0x0", "0x184" ], "type": "int32" },
+    "Deaths":  { "root": "PlayerBase", "offsets": [ "0x30", "0x0", "0x18C" ], "type": "int32" },
+    "Assists": { "root": "PlayerBase", "offsets": [ "0x30", "0x0", "0x188" ], "type": "int32" },
+    "Score":   { "root": "PlayerBase", "offsets": [ "0x30", "0x0", "0x17C" ], "type": "int32" }
+  }
+}
