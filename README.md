@@ -23,7 +23,8 @@ If Windows SmartScreen warns about the app, click **More info → Run anyway**.
 ## Notes
 
 - Game mode isn't available in co-op or Arcade.
-- BF2RPC only reads the game's memory and never modifies it, but use it at your own risk.
+- BF2RPC only reads the game's memory and never modifies it.
+- If you have issues or need to get in contact with me, my discord is `temptations444.`
 
 ## Building
 
