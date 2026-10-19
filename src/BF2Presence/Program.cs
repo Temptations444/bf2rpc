@@ -39,6 +39,9 @@ public static class Program
             return 1;
         }
 
+        bool cli = args.FirstOrDefault() is not (null or "--background" or "--config");
+        if (cli) AllocConsole();
+
         Application.SetHighDpiMode(HighDpiMode.SystemAware);
         Application.EnableVisualStyles();
         var baseDir = AppContext.BaseDirectory;
@@ -88,7 +91,7 @@ public static class Program
                 case "--find-string" when args.Length >= 2:
                     return FindString(settings, string.Join(' ', args.Skip(1)));
                 case null or "--background":
-                    return Run(settings, Path.Combine(baseDir, "appsettings.json"), offsets, args.Length > 0, cts.Token);
+                    return Run(settings, Path.Combine(baseDir, "appsettings.json"), offsets, cts.Token);
                 default:
                     Console.WriteLine(Usage);
                     return 1;
@@ -103,22 +106,27 @@ public static class Program
             Console.Error.WriteLine($"Invalid input: {ex.Message}");
             return 1;
         }
+        finally
+        {
+            if (cli)
+            {
+                Console.Write($"{Environment.NewLine}Press Enter to close...");
+                Console.ReadLine();
+            }
+        }
     }
 
-    private static int Run(AppSettings settings, string settingsPath, OffsetsConfig offsets, bool background, CancellationToken ct)
-    {
-        if (!background && OwnsConsole())
-        {
-            Process.Start(new ProcessStartInfo(Environment.ProcessPath!, "--background") { UseShellExecute = false, CreateNoWindow = true });
-            return 0;
-        }
+    [System.Runtime.InteropServices.DllImport("kernel32.dll")]
+    private static extern bool AllocConsole();
 
+    private static int Run(AppSettings settings, string settingsPath, OffsetsConfig offsets, CancellationToken ct)
+    {
         using var single = new Mutex(true, @"Local\BF2Presence", out bool first);
-        if (!first) return Fail("BF2Presence is already running (see the tray icon by the clock).", background);
+        if (!first) return Fail("BF2RPC is already running (see the tray icon by the clock).");
 
         if (string.IsNullOrWhiteSpace(settings.DiscordClientId))
             return Fail("No Discord client ID set. Create an application at https://discord.com/developers/applications " +
-                        "and put its Application ID in appsettings.json (\"discordClientId\").", background);
+                        "and put its Application ID in appsettings.json (\"discordClientId\").");
 
         using var presence = new PresenceService(settings.DiscordClientId);
         using var tray = new Tray(settingsPath);
@@ -164,17 +172,12 @@ public static class Program
         return 0;
     }
 
-    private static bool OwnsConsole() => GetConsoleProcessList(new uint[2], 2) == 1;
-
-    [System.Runtime.InteropServices.DllImport("kernel32.dll")]
-    private static extern uint GetConsoleProcessList(uint[] processList, uint count);
-
-    private static int Fail(string message, bool gui)
+    private static int Fail(string message)
     {
-        Console.Error.WriteLine(message);
-        if (gui) MessageBox.Show(message, "BF2Presence", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        MessageBox.Show(message, "BF2RPC", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         return 1;
     }
+
     private static (Session?, PresenceModel?) Tick(Session? session, AppSettings settings, OffsetsConfig offsets, PresenceService presence)
     {
         if (session is not null && session.Process.HasExited)
